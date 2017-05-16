@@ -1,0 +1,49 @@
+<resources>
+    <string name="app_name">Mail Room Logistics</string>
+    <string name="default_fedex">FedEx</string>
+    <string name="default_usps">USPS</string>
+    <string name="default_ups">UPS</string>
+    <string name="default_other">Other</string>
+    <string name="new_batch">New Batch</string>
+    <string name="view_batches">View Batches</string>
+    <string name="batch_quantity">Number of Packages:</string>
+    <string name="default_carriers">Carrier</string>
+    <string-array name="carrier_array">
+        <item>FedEx</item>
+        <item>USPS</item>
+        <item>UPS</item>
+        <item>Other</item>
+    </string-array>
+    <string-array name="barcode_types">
+        <item>FedEx Express</item>
+        <item>FedEx Ground</item>
+        <item>UPS</item>
+        <item>USPS</item>
+        <item>UHL</item>
+        <item>Other</item>
+    </string-array>
+    <string-array name="yes_no">
+        <item>Yes</item>
+        <item>No</item>
+    </string-array>
+    <string name="carrier_barcode_type">Carrier Type:</string>
+    <string name="default_signer">Signer:</string>
+    <string name="dialog_title">SIGN HERE</string>
+    <string name="add_package">Add Package</string>
+    <string name="default_quantity">1</string>
+    <string name="admin_adam">Adam</string>
+    <string name="new_parcel">New Parcel</string>
+    <string name="recepient">Recepient</string>
+    <string name="create_batch">Create Batch</string>
+    <string name="create_parcel">Create Parcel</string>
+    <string name="finished">Finished</string>
+    <string name="hint_cancel">Cancel</string>
+    <string name="hint_clear">Clear</string>
+    <string name="hint_save">Save</string>
+    <string name="date_received">Date Received:</string>
+    <string name="date_delivered">Date Delivered:</string>
+    <string name="tracking_number">Tracking Number:</string>
+    <string name="scan">Scan</string>
+    <string name="is_damaged">Damaged?</string>
+    <string name="get_signature">Sign Here</string>
+</resources>
