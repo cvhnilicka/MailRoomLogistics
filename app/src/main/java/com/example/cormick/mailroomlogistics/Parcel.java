@@ -1,3 +1,5 @@
+package com.example.cormick.mailroomlogistics;
+
 import android.graphics.Bitmap;
 
 /**
