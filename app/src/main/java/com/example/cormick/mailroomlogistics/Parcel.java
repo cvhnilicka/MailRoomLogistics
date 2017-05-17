@@ -1,12 +1,15 @@
 package com.example.cormick.mailroomlogistics;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
+
+import java.io.Serializable;
 
 /**
  * Created by Cormick on 5/16/17.
  */
 
-public class Parcel {
+public class Parcel implements Serializable {
     private String recipientName;
     private String signer;
     private Bitmap signature;
@@ -14,16 +17,21 @@ public class Parcel {
     private String carrier;
     private String dateReceived;
     private String dateDelivered;
+    private String trackingNumber;
 
-    public Parcel(String recipient, String signer, Bitmap signature, boolean isDamaged, String carrier,
-                  String dateReceived, String dateDelivered) {
+    public Parcel(String recipient, String trackingNumber, boolean isDamaged, String carrier,
+                  String dateReceived) {
         this.recipientName = recipient;
-        this.signer = signer;
-        this.signature = signature;
         this.isDamaged = isDamaged;
         this.carrier = carrier;
+        this.trackingNumber = trackingNumber;
         this.dateReceived = dateReceived;
-        this.dateDelivered = dateDelivered;
+//        this.dateDelivered = dateDelivered;
+
+    }
+
+    public Parcel() {
+
     }
 
     /* Setters **/
@@ -56,9 +64,17 @@ public class Parcel {
         this.dateDelivered = dateDelivered;
     }
 
+    public void setTrackingNumber(String trackingNumber) {
+        this.trackingNumber = trackingNumber;
+    }
+
     /* End of setters **/
 
     /* Getters **/
+
+    public String getTrackingNumber() {
+        return this.trackingNumber;
+    }
 
     public Bitmap getSignature() {
         return this.signature;
@@ -83,6 +99,14 @@ public class Parcel {
     public String getDateDelivered() {
         return this.dateDelivered;
     }
+
+    public boolean isDamaged() {
+        return isDamaged;
+    }
+
+//    public signature getSignature() {
+//        return this.signature;
+//    }
 
     /* End of getters **/
 }

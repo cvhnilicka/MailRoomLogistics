@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -37,7 +38,9 @@ import java.util.Locale;
 public class NewParcelActivity extends AppCompatActivity {
 
     private Spinner carrierSpinner, damagedSpinner;
-    private Button getSignature, mClear, mCancel;
+    private Button getSignature, mClear, mCancel, mSave;
+    private EditText eRecipient, eTracking, eCarrier;
+    private TextView eDateReceived;
 
     Dialog dialog;
     LinearLayout mContent;
@@ -45,9 +48,20 @@ public class NewParcelActivity extends AppCompatActivity {
     signature mSignature;
     Bitmap bitmap;
 
+    private String signerName = "";
+    private String recipientName = "";
+    private String carrierName = "";
+    private boolean isDamaged = false;
+    private String date_received = "";
+    private String date_delivered = "";
+    private String tracking_number = "";
+    private Parcel newParcel;
+    private Batch newBatch;
+
+
     // Creating Separate Directory for saving Generated Images
     String DIRECTORY = Environment.getExternalStorageDirectory().getPath() + "/DigitSign/";
-    String pic_name = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+    String pic_name = new SimpleDateFormat("MM/dd/yyyy_HH:mm:ss", Locale.getDefault()).format(new Date());
     String StoredPath = DIRECTORY + pic_name + ".png";
 
     private EditText trackingNumber;
@@ -57,12 +71,32 @@ public class NewParcelActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_parcel);
 
+        newBatch = (Batch) getIntent().getExtras().getSerializable("newBatch");
+
+        Log.v("BATCH TRANSFER: ", "parcel number : " + newBatch.getArrSize());
+
+        newParcel = new Parcel();
+
 
         // set up activity variables
         damagedSpinner = (Spinner) findViewById(R.id.damagedSpinner);
         carrierSpinner = (Spinner) findViewById(R.id.carrierSpinner);
         trackingNumber = (EditText) findViewById(R.id.trackingNumber);
         getSignature = (Button) findViewById(R.id.getSignature);
+        eRecipient = (EditText) findViewById(R.id.recipient_name);
+        eDateReceived = (TextView) findViewById(R.id.date_received);
+
+
+
+        Log.v("tag", "Date format");
+
+        String date = new SimpleDateFormat("MM/dd/yyyy_HH:mm:ss", Locale.getDefault()).format(new Date());
+
+        Log.v("tag", "Date: " + date);
+
+        this.date_received = date;
+
+        eDateReceived.setText(date);
 
 
 
@@ -76,6 +110,7 @@ public class NewParcelActivity extends AppCompatActivity {
         getSignature.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                getSignature.setEnabled(true);
                 captureSignature();
             }
         });
@@ -92,8 +127,8 @@ public class NewParcelActivity extends AppCompatActivity {
         mContent.addView(mSignature, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
         mClear = (Button) dialog.findViewById(R.id.clear);
-        getSignature = (Button) dialog.findViewById(R.id.getsign);
-        getSignature.setEnabled(false);
+        mSave = (Button) dialog.findViewById(R.id.getsign);
+//        mSave.setEnabled(false);
         mCancel = (Button) dialog.findViewById(R.id.cancel);
         view = mContent;
 
@@ -105,13 +140,13 @@ public class NewParcelActivity extends AppCompatActivity {
             }
         });
 
-        getSignature.setOnClickListener(new View.OnClickListener() {
+        mSave.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
 
                 Log.v("tag", "Panel Saved");
                 view.setDrawingCacheEnabled(true);
-                mSignature.save(view, StoredPath);
+                mSignature.save(view, StoredPath, mContent, bitmap, newParcel);
                 dialog.dismiss();
                 Toast.makeText(getApplicationContext(), "Successfully Saved", Toast.LENGTH_SHORT).show();
                 // Calling the same class
@@ -131,6 +166,52 @@ public class NewParcelActivity extends AppCompatActivity {
     }
 
     public void finished(View view) {
+
+        if (this.recipientName.equals("")) {
+            Log.v("tag", "You need a recipient");
+        }
+
+        if (this.date_received.equals("")) {
+            Log.v("tag", "You need a date received");
+        }
+        if (this.tracking_number.equals("")) {
+            Log.v("tag", "You need a tracking number");
+        }
+
+//        this.recipientName = (EditText)findViewById(R.id.recipient_name).getText .toString();
+
+        this.recipientName = eRecipient.getText().toString();
+        this.carrierName = carrierSpinner.getSelectedItem().toString();
+        this.tracking_number = trackingNumber.getText().toString();
+
+
+        Log.v("Finish", "Recipient Name: " + this.recipientName);
+        Log.v("Finish", "Carrier Name: " + this.carrierName);
+        Log.v("Finish", "Tracking Number: " + this.tracking_number);
+        Log.v("Finish", "Date Received: " +this.date_received );
+
+
+        newParcel.setRecipientName(this.recipientName);
+        newParcel.setCarrier(this.carrierName);
+        newParcel.setDateReceived(this.date_received);
+        newParcel.setTrackingNumber(this.tracking_number);
+
+//        (String recipient, String trackingNumber, boolean isDamaged, String carrier,
+//                String dateReceived, String dateDelivered)
+
+//        Parcel newParcel = new Parcel(this.recipientName, this.tracking_number, this.isDamaged,
+//                this.carrierName, this.date_received);
+//        SQLDatabaseHandler db = new SQLDatabaseHandler(this);
+
+
+//        newBatch.addParcel(newParcel);
+        Log.v("tag", "Parcel added");
+        Intent data = new Intent();
+        data.putExtra("NEWPARCEL", newParcel);
+        setResult(1, data);
+//        data.setData(newParcel);
+        Log.v("length", "Parcel arr length: " + newBatch.getArrSize());
+
         finish();
     }
 
@@ -166,120 +247,120 @@ public class NewParcelActivity extends AppCompatActivity {
             trackingNumber.setText(scanContent);
         }
     }
-    public class signature extends View {
-        private static final float STROKE_WIDTH = 5f;
-        private static final float HALF_STROKE_WIDTH = STROKE_WIDTH / 2;
-        private Paint paint = new Paint();
-        private Path path = new Path();
-
-        private float lastTouchX;
-        private float lastTouchY;
-        private final RectF dirtyRect = new RectF();
-
-        public signature(Context context, AttributeSet attrs) {
-            super(context, attrs);
-            paint.setAntiAlias(true);
-            paint.setColor(Color.BLACK);
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeJoin(Paint.Join.ROUND);
-            paint.setStrokeWidth(STROKE_WIDTH);
-        }
-
-        public void save(View v, String StoredPath) {
-            Log.v("tag", "Width: " + v.getWidth());
-            Log.v("tag", "Height: " + v.getHeight());
-            if (bitmap == null) {
-                bitmap = Bitmap.createBitmap(mContent.getWidth(), mContent.getHeight(), Bitmap.Config.RGB_565);
-            }
-            Canvas canvas = new Canvas(bitmap);
-            try {
-                // Output the file
-                FileOutputStream mFileOutStream = new FileOutputStream(StoredPath);
-                v.draw(canvas);
-                // Convert the output file to Image such as .png
-                bitmap.compress(Bitmap.CompressFormat.PNG, 90, mFileOutStream);
-                mFileOutStream.flush();
-                mFileOutStream.close();
-            } catch (Exception e) {
-                Log.v("log_tag", e.toString());
-            }
-        }
-
-        public void clear() {
-            path.reset();
-            invalidate();
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            canvas.drawPath(path, paint);
-        }
-
-        @Override
-        public boolean onTouchEvent(MotionEvent event) {
-            float eventX = event.getX();
-            float eventY = event.getY();
-            getSignature.setEnabled(true);
-
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    path.moveTo(eventX, eventY);
-                    lastTouchX = eventX;
-                    lastTouchY = eventY;
-                    return true;
-
-                case MotionEvent.ACTION_MOVE:
-
-                case MotionEvent.ACTION_UP:
-                    resetDirtyRect(eventX, eventY);
-                    int historySize = event.getHistorySize();
-                    for (int i = 0; i < historySize; i++) {
-                        float historicalX = event.getHistoricalX(i);
-                        float historicalY = event.getHistoricalY(i);
-                        expandDirtyRect(historicalX, historicalY);
-                        path.lineTo(historicalX, historicalY);
-                    }
-                    path.lineTo(eventX, eventY);
-                    break;
-                default:
-                    debug("Ignored touch event: " + event.toString());
-                    return false;
-            }
-
-            invalidate((int) (dirtyRect.left - HALF_STROKE_WIDTH),
-                    (int) (dirtyRect.top - HALF_STROKE_WIDTH),
-                    (int) (dirtyRect.right + HALF_STROKE_WIDTH),
-                    (int) (dirtyRect.bottom + HALF_STROKE_WIDTH));
-
-            lastTouchX = eventX;
-            lastTouchY = eventY;
-
-            return true;
-        }
-
-        private void debug(String string) {
-            Log.v("log_tag", string);
-        }
-
-        private void expandDirtyRect(float historicalX, float historicalY) {
-            if (historicalX < dirtyRect.left) {
-                dirtyRect.left = historicalX;
-            } else if (historicalX > dirtyRect.right) {
-                dirtyRect.right = historicalX;
-            }
-
-            if (historicalY < dirtyRect.top) {
-                dirtyRect.top = historicalY;
-            } else if (historicalY > dirtyRect.bottom) {
-                dirtyRect.bottom = historicalY;
-            }
-        }
-
-        private void resetDirtyRect(float eventX, float eventY) {
-            dirtyRect.left = Math.min(lastTouchX, eventX);
-            dirtyRect.right = Math.max(lastTouchX, eventX);
-            dirtyRect.top = Math.min(lastTouchY, eventY);
-            dirtyRect.bottom = Math.max(lastTouchY, eventY);
-        }
-    }
+//    public class signature extends View {
+//        private static final float STROKE_WIDTH = 5f;
+//        private static final float HALF_STROKE_WIDTH = STROKE_WIDTH / 2;
+//        private Paint paint = new Paint();
+//        private Path path = new Path();
+//
+//        private float lastTouchX;
+//        private float lastTouchY;
+//        private final RectF dirtyRect = new RectF();
+//
+//        public signature(Context context, AttributeSet attrs) {
+//            super(context, attrs);
+//            paint.setAntiAlias(true);
+//            paint.setColor(Color.BLACK);
+//            paint.setStyle(Paint.Style.STROKE);
+//            paint.setStrokeJoin(Paint.Join.ROUND);
+//            paint.setStrokeWidth(STROKE_WIDTH);
+//        }
+//
+//        public void save(View v, String StoredPath) {
+//            Log.v("tag", "Width: " + v.getWidth());
+//            Log.v("tag", "Height: " + v.getHeight());
+//            if (bitmap == null) {
+//                bitmap = Bitmap.createBitmap(mContent.getWidth(), mContent.getHeight(), Bitmap.Config.RGB_565);
+//            }
+//            Canvas canvas = new Canvas(bitmap);
+//            try {
+//                // Output the file
+//                FileOutputStream mFileOutStream = new FileOutputStream(StoredPath);
+//                v.draw(canvas);
+//                // Convert the output file to Image such as .png
+//                bitmap.compress(Bitmap.CompressFormat.PNG, 90, mFileOutStream);
+//                mFileOutStream.flush();
+//                mFileOutStream.close();
+//            } catch (Exception e) {
+//                Log.v("log_tag", e.toString());
+//            }
+//        }
+//
+//        public void clear() {
+//            path.reset();
+//            invalidate();
+//        }
+//
+//        @Override
+//        protected void onDraw(Canvas canvas) {
+//            canvas.drawPath(path, paint);
+//        }
+//
+//        @Override
+//        public boolean onTouchEvent(MotionEvent event) {
+//            float eventX = event.getX();
+//            float eventY = event.getY();
+//            getSignature.setEnabled(true);
+//
+//            switch (event.getAction()) {
+//                case MotionEvent.ACTION_DOWN:
+//                    path.moveTo(eventX, eventY);
+//                    lastTouchX = eventX;
+//                    lastTouchY = eventY;
+//                    return true;
+//
+//                case MotionEvent.ACTION_MOVE:
+//
+//                case MotionEvent.ACTION_UP:
+//                    resetDirtyRect(eventX, eventY);
+//                    int historySize = event.getHistorySize();
+//                    for (int i = 0; i < historySize; i++) {
+//                        float historicalX = event.getHistoricalX(i);
+//                        float historicalY = event.getHistoricalY(i);
+//                        expandDirtyRect(historicalX, historicalY);
+//                        path.lineTo(historicalX, historicalY);
+//                    }
+//                    path.lineTo(eventX, eventY);
+//                    break;
+//                default:
+//                    debug("Ignored touch event: " + event.toString());
+//                    return false;
+//            }
+//
+//            invalidate((int) (dirtyRect.left - HALF_STROKE_WIDTH),
+//                    (int) (dirtyRect.top - HALF_STROKE_WIDTH),
+//                    (int) (dirtyRect.right + HALF_STROKE_WIDTH),
+//                    (int) (dirtyRect.bottom + HALF_STROKE_WIDTH));
+//
+//            lastTouchX = eventX;
+//            lastTouchY = eventY;
+//
+//            return true;
+//        }
+//
+//        private void debug(String string) {
+//            Log.v("log_tag", string);
+//        }
+//
+//        private void expandDirtyRect(float historicalX, float historicalY) {
+//            if (historicalX < dirtyRect.left) {
+//                dirtyRect.left = historicalX;
+//            } else if (historicalX > dirtyRect.right) {
+//                dirtyRect.right = historicalX;
+//            }
+//
+//            if (historicalY < dirtyRect.top) {
+//                dirtyRect.top = historicalY;
+//            } else if (historicalY > dirtyRect.bottom) {
+//                dirtyRect.bottom = historicalY;
+//            }
+//        }
+//
+//        private void resetDirtyRect(float eventX, float eventY) {
+//            dirtyRect.left = Math.min(lastTouchX, eventX);
+//            dirtyRect.right = Math.max(lastTouchX, eventX);
+//            dirtyRect.top = Math.min(lastTouchY, eventY);
+//            dirtyRect.bottom = Math.max(lastTouchY, eventY);
+//        }
+//    }
 }
