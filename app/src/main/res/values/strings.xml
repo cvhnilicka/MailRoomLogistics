@@ -48,4 +48,6 @@
     <string name="get_signature">Sign Here</string>
     <string name="ongoing">Ongoing</string>
     <string name="destination">Destination:</string>
+    <string name="batch_complete">Batch Complete</string>
+    <string name="batch_delivered">Batch Delivered</string>
 </resources>

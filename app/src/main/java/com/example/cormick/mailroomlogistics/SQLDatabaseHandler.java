@@ -5,7 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.util.Log;
+import android.widget.SimpleCursorAdapter;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,17 +39,12 @@ public class SQLDatabaseHandler extends SQLiteOpenHelper {
     private static final String PARCEL_DATE_RECEIVED = "date_received";
     private static final String PARCEL_DATE_DELIVERED = "date_delivered";
     private static final String TRACKING_NUMBER = "tracking_number";
+    private static final String PARCEL_BATCH_LINK = "batch_id";
 
 
-//    private ArrayList<Parcel> parcels;
-//    private int parcel_number;
-//    private String signerName;
-//    private signature signature;
-//    private String recipientName;
-//    private String dateReceived;
-//    private String dateDelivered;
-//    private String destination;
-//    private boolean hasDamage;
+    // batch id..
+    private static int BATCH_ID = 00002;
+
 
     // Columns for the batches
     private static final String BATCHES_ID = "id";
@@ -69,8 +68,8 @@ public class SQLDatabaseHandler extends SQLiteOpenHelper {
                 + PARCEL_ID + " INTEGER PRIMARY KEY," + PARCEL_CARRIER + " TEXT,"
                 + PARCEL_DAMAGE + " TEXT," + PARCEL_DATE_DELIVERED + " TEXT,"
                 + PARCEL_DATE_RECEIVED + " TEXT," + PARCEL_RECIPIENT + " TEXT,"
-                + PARCEL_SIGNATURE + " TEXT," + TRACKING_NUMBER + " TEXT,"
-                + PARCEL_IMAGE + " BLOB" + ")";
+                + PARCEL_SIGNATURE + " BLOB," + TRACKING_NUMBER + " TEXT,"
+                + PARCEL_IMAGE + " BLOB," + PARCEL_BATCH_LINK + " INTEGER" + ")";
 
 
         String CREATE_BRANCHES_TABLE = "CREATE TABLE " + TABLE_BATCHES + "("
@@ -95,7 +94,7 @@ public class SQLDatabaseHandler extends SQLiteOpenHelper {
 
     }
 
-    public void addParcel(Parcel parcel) {
+    public void addParcel(Parcel parcel, int batch_id) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -105,8 +104,43 @@ public class SQLDatabaseHandler extends SQLiteOpenHelper {
         values.put(PARCEL_DATE_DELIVERED, parcel.getDateDelivered());
         values.put(PARCEL_RECIPIENT, parcel.getRecipientName());
         values.put(TRACKING_NUMBER, parcel.getTrackingNumber());
-        values.put(SIGNER_NAME, parcel.getSigner());
-//        values.put(SIGNATURE, parcel.getSignature());
+//        values.put(SIGNER_NAME, parcel.getSigner());
+//        ByteArrayOutputStream sig = new ByteArrayOutputStream();
+//        parcel.getSignature().compress(Bitmap.CompressFormat.PNG, 100, sig);
+//        values.put(SIGNATURE, sig.toByteArray());
+        values.put(PARCEL_BATCH_LINK, batch_id);
+
+        db.insert(TABLE_PARCELS, null, values);
+        db.close();
+
+
+
+    }
+
+    public void saveBatch(Batch newBatch) {
+        // get the db
+
+        ContentValues values = new ContentValues();
+        values.put(BATCH_DATE_DELIVERED, newBatch.getDateDelivered());
+        values.put(BATCH_DATE_RECEIVED, newBatch.getDateReceived());
+        values.put(BATCHES_ID, BATCH_ID);
+        values.put(BATCHES_PARCEL_NUMBER, newBatch.getParcel_number());
+//        ByteArrayOutputStream sig = new ByteArrayOutputStream();
+//        newBatch.getSignature().compress(Bitmap.CompressFormat.PNG, 100, sig);
+//        values.put(SIGNATURE, sig.toByteArray());
+        values.put(SIGNER_NAME, newBatch.getSignerName());
+        values.put(DESTINATION, newBatch.getDestination());
+        values.put(HASDAMAGE, newBatch.isHasDamage());
+
+        System.out.println(values);
+
+        for(int i = 0; i < newBatch.getParcels().size(); i++) {
+            addParcel(newBatch.getParcels().get(i), BATCH_ID);
+        }
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.insert(TABLE_BATCHES, null, values);
+        db.close();
+        BATCH_ID = BATCH_ID+1;
 
     }
 
@@ -128,6 +162,48 @@ public class SQLDatabaseHandler extends SQLiteOpenHelper {
         }
         return parcelList;
     }
-//    private static final String BATCHES_
-//
+
+    public List<Batch> getAllBatches() {
+        List<Batch> batchList = new ArrayList<Batch>();
+
+        // Select query
+        String getBatchQuery = "SELECT * FROM " + TABLE_BATCHES;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(getBatchQuery, null);
+
+        if(cursor.moveToFirst()) {
+            do {
+                Batch newBatch = new Batch();
+                Log.v("DEBUG", "CURSOR: " + cursor);
+//                private ArrayList<Parcel> parcels;
+//                private int parcel_number;
+//                private String signerName;
+//                private Bitmap signature;
+//                private String recipientName;
+//                private String dateReceived;
+//                private String dateDelivered;
+//                private String destination;
+//                private boolean hasDamage;
+
+//                newBatch.
+
+            } while (cursor.moveToNext());
+        }
+        return batchList;
+
+    }
+
+    public int getBatchCount() {
+        String batchCountQuery = "SELECT * FROM " + TABLE_BATCHES;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(batchCountQuery, null);
+        int count = cursor.getCount();
+        cursor.close();
+
+
+        return count;
+    }
+
+
 }

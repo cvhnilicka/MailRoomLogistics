@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.cormick.mailroomlogistics">
-    <uses-feature android:name="android.hardware.camera"
+
+    <uses-feature
+        android:name="android.hardware.camera"
         android:required="true" />
 
     <application
@@ -25,11 +27,18 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".NewBatchActivity" />
         </activity>
-        <activity android:name=".NewParcelActivity"
+        <activity
+            android:name=".NewParcelActivity"
             android:parentActivityName=".NewBatchActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".NewParcelActivity"/>
+                android:value=".NewParcelActivity" />
+        </activity>
+        <activity android:name=".ViewBatchesActivity"
+            android:parentActivityName=".FrontPage">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ViewBatchesActivity"/>
         </activity>
     </application>
 

@@ -51,7 +51,7 @@ public class signature extends View {
         return mSignature;
     }
 
-    public void save(View v, String StoredPath, LinearLayout tempContent, Bitmap bitmap, Parcel parcel) {
+    public void save(View v, String StoredPath, LinearLayout tempContent, Bitmap bitmap, Batch batch) {
         Log.v("tag", "Width: " + v.getWidth());
         Log.v("tag", "Height: " + v.getHeight());
         if (bitmap == null) {
@@ -67,8 +67,8 @@ public class signature extends View {
 //            mFileOutStream.flush();
 //            mFileOutStream.close();
 
-            parcel.setSignature(bitmap);
-            Log.v("tag", "saved bitmap to parcel");
+            batch.setSignature(bitmap);
+            Log.v("tag", "saved bitmap to batch");
         } catch (Exception e) {
             Log.v("log_tag", e.toString());
         }

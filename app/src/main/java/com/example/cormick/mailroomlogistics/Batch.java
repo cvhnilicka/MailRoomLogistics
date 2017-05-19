@@ -1,6 +1,7 @@
 package com.example.cormick.mailroomlogistics;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ public class Batch implements Serializable {
     private ArrayList<Parcel> parcels;
     private int parcel_number;
     private String signerName;
-    private signature signature;
+    private Bitmap signature;
     private String recipientName;
     private String dateReceived;
     private String dateDelivered;
@@ -37,7 +38,7 @@ public class Batch implements Serializable {
         return this.parcels.size();
     }
 
-    public signature getSignature() {
+    public Bitmap getSignature() {
         return this.signature;
     }
 
@@ -80,8 +81,10 @@ public class Batch implements Serializable {
         this.recipientName = name;
     }
 
-    public void setSignature(signature signature) {
+    public void setSignature(Bitmap signature) {
+
         this.signature = signature;
+        Log.v("DEBUG", "Saved Batch Signature: " + signature);
     }
 
     public void setParcels(ArrayList<Parcel> parcels) {
