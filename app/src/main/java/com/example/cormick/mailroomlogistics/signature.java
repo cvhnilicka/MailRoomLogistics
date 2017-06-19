@@ -59,14 +59,7 @@ public class signature extends View {
         }
         Canvas canvas = new Canvas(bitmap);
         try {
-            // Output the file
-//            FileOutputStream mFileOutStream = new FileOutputStream(StoredPath);
             v.draw(canvas);
-            // Convert the output file to Image such as .png
-//            bitmap.compress(Bitmap.CompressFormat.PNG, 90, mFileOutStream);
-//            mFileOutStream.flush();
-//            mFileOutStream.close();
-
             batch.setSignature(bitmap);
             Log.v("tag", "saved bitmap to batch");
         } catch (Exception e) {

@@ -12,7 +12,8 @@ import java.io.Serializable;
 public class Parcel implements Serializable {
     private String recipientName;
     private String signer;
-    private Bitmap signature;
+    private String signature;
+    private String photo;
     private boolean isDamaged;
     private String carrier;
     private String dateReceived;
@@ -40,6 +41,8 @@ public class Parcel implements Serializable {
         this.recipientName = name;
     }
 
+    public void setPhotoPath(String photoPath) { this.photo = photoPath;}
+
     public void setSigner(String signer) {
         this.signer = signer;
     }
@@ -48,7 +51,7 @@ public class Parcel implements Serializable {
         this.isDamaged = damaged;
     }
 
-    public void setSignature(Bitmap signature) {
+    public void setSignature(String signature) {
         this.signature = signature;
     }
 
@@ -68,6 +71,8 @@ public class Parcel implements Serializable {
         this.trackingNumber = trackingNumber;
     }
 
+//    public void setPhoto(Bitmap newPhoto) { this.photo = newPhoto; }
+
     /* End of setters **/
 
     /* Getters **/
@@ -76,7 +81,9 @@ public class Parcel implements Serializable {
         return this.trackingNumber;
     }
 
-    public Bitmap getSignature() {
+    public String getPhotoPath() { return this.photo; }
+
+    public String getSignaturePath() {
         return this.signature;
     }
 
@@ -103,6 +110,8 @@ public class Parcel implements Serializable {
     public boolean isDamaged() {
         return isDamaged;
     }
+
+//    public Bitmap getPhoto() { return this.photo; }
 
 //    public signature getSignature() {
 //        return this.signature;

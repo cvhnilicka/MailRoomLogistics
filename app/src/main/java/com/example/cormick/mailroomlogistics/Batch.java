@@ -22,6 +22,10 @@ public class Batch implements Serializable {
     private String dateDelivered;
     private String destination;
     private boolean hasDamage;
+    byte[] signatureArray;
+    private String photo_path;
+    private int batch_id;
+
 
     public Batch(int parcel_number) {
         this.parcel_number = parcel_number;
@@ -34,9 +38,13 @@ public class Batch implements Serializable {
 
     /* Getters **/
 
+    public int getBatch_id() { return this.batch_id; }
+
     public int getArrSize() {
         return this.parcels.size();
     }
+
+    public String getPhoto_path() { return this.photo_path; }
 
     public Bitmap getSignature() {
         return this.signature;
@@ -49,6 +57,9 @@ public class Batch implements Serializable {
     public int getParcel_number() {
         return this.parcel_number;
     }
+
+    public byte[] getSignatureArray() { return this.signatureArray; }
+
     public ArrayList<Parcel> getParcels() {
         return this.parcels;
     }
@@ -77,6 +88,10 @@ public class Batch implements Serializable {
 
     /* Setters **/
 
+    public void setBatch_id(int batch_id) { this.batch_id = batch_id; }
+
+    public void setPhoto_path(String photo_path) { this.photo_path = photo_path; }
+
     public void setRecipientName(String name) {
         this.recipientName = name;
     }
@@ -86,6 +101,8 @@ public class Batch implements Serializable {
         this.signature = signature;
         Log.v("DEBUG", "Saved Batch Signature: " + signature);
     }
+
+    public void setSignatureArray(byte[] array) { this.signatureArray = array; }
 
     public void setParcels(ArrayList<Parcel> parcels) {
         this.parcels = parcels;

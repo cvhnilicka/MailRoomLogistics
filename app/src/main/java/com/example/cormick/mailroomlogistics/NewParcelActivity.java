@@ -1,7 +1,9 @@
 package com.example.cormick.mailroomlogistics;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -22,6 +24,7 @@ import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -30,6 +33,8 @@ import android.widget.Toast;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -37,16 +42,21 @@ import java.util.Locale;
 
 public class NewParcelActivity extends AppCompatActivity {
 
+    private static final int CAMERA_REQUEST = 1888;
+
     private Spinner carrierSpinner, damagedSpinner;
-    private Button getSignature, mClear, mCancel, mSave;
+    private Button getSignature, mClear, mCancel, mSave, getPhoto;
     private EditText eRecipient, eTracking, eCarrier;
     private TextView eDateReceived;
+    private ImageView imageView;
 
     Dialog dialog;
     LinearLayout mContent;
     View view;
     signature mSignature;
-    Bitmap bitmap;
+    Bitmap bitmap, photoBitmap;
+
+    byte[] photoArray;
 
     private String signerName = "";
     private String recipientName = "";
@@ -85,6 +95,17 @@ public class NewParcelActivity extends AppCompatActivity {
         getSignature = (Button) findViewById(R.id.getSignature);
         eRecipient = (EditText) findViewById(R.id.recipient_name);
         eDateReceived = (TextView) findViewById(R.id.date_received);
+        getPhoto = (Button) findViewById(R.id.getPhoto);
+        imageView = (ImageView) findViewById(R.id.imageView);
+
+        getPhoto.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(cameraIntent, CAMERA_REQUEST);
+            }
+        });
 
 
 
@@ -196,6 +217,13 @@ public class NewParcelActivity extends AppCompatActivity {
         newParcel.setDateReceived(this.date_received);
         newParcel.setTrackingNumber(this.tracking_number);
 
+//        ByteArrayOutputStream out = new ByteArrayOutputStream();
+//        photoBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+
+//        this.photoArray = out.toByteArray();
+//        newParcel.setPhotoArray(this.photoArray);
+//        newParcel.setPhoto(photoBitmap);
+//        this.photoArray = photoBitmap
 //        (String recipient, String trackingNumber, boolean isDamaged, String carrier,
 //                String dateReceived, String dateDelivered)
 
@@ -237,17 +265,58 @@ public class NewParcelActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        carrierSpinner = (Spinner) findViewById(R.id.carrierSpinner);
-        String selected = this.carrierSpinner.getSelectedItem().toString();
-        IntentResult scanResults = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
 
-        if(scanResults != null) {
-            // got shit
+        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+            Bitmap photo = (Bitmap) intent.getExtras().get("data");
+//            photoBitmap = photo;
 
-            System.out.println("THIS SHIT IS THE TYPE RIGHT NOW: " + selected);
-            String scanContent = scanResults.getContents();
-            trackingNumber.setText(scanContent);
+            ContextWrapper cw = new ContextWrapper(getApplicationContext());
+
+
+
+            String fname = pic_name + "photo.png";
+            File newfile = new File(cw.getFilesDir(), fname);
+
+            try {
+
+//                    createDirectory();
+//                    createFile(storedPath);
+                // Output the file
+                Log.v("SAVE", "-2");
+                newfile.getParentFile().mkdirs();
+                Log.v("SAVE", "-1");
+                newfile.createNewFile();
+                Log.v("SAVE", "0");
+                FileOutputStream mFileOutStream = new FileOutputStream(newfile);
+                Log.v("SAVE", "1");
+                // Convert the output file to Image such as .png
+               photo.compress(Bitmap.CompressFormat.PNG, 90, mFileOutStream);
+                Log.v("SAVE", "2");
+                String path = newfile.getAbsolutePath();
+                newParcel.setPhotoPath(path);
+                Log.v("SAVE", "SUCCESS DIR NAME" + newfile.getAbsolutePath());
+                mFileOutStream.flush();
+                mFileOutStream.close();
+            } catch (Exception e) {
+                Log.v("log_tag", e.toString());
+            }
+            imageView.setImageBitmap(photo);
+//            this.newParcel.setPhoto(photo);
+        } else {
+            carrierSpinner = (Spinner) findViewById(R.id.carrierSpinner);
+            String selected = this.carrierSpinner.getSelectedItem().toString();
+            IntentResult scanResults = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
+
+            if (scanResults != null) {
+                // got shit
+
+                System.out.println("THIS SHIT IS THE TYPE RIGHT NOW: " + selected);
+                String scanContent = scanResults.getContents();
+                trackingNumber.setText(scanContent);
+            }
         }
+
+
     }
 
 }

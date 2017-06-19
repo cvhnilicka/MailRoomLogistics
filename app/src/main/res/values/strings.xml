@@ -8,6 +8,7 @@
     <string name="view_batches">View Batches</string>
     <string name="batch_quantity">Number of Packages:</string>
     <string name="default_carriers">Carrier</string>
+    <string name="get_photo">Capture Photo</string>
     <string-array name="carrier_array">
         <item>FedEx</item>
         <item>USPS</item>
@@ -50,4 +51,6 @@
     <string name="destination">Destination:</string>
     <string name="batch_complete">Batch Complete</string>
     <string name="batch_delivered">Batch Delivered</string>
+    <string name="title_activity_view_batch">viewBatch</string>
+    <string name="signer_name">Signer Name</string>
 </resources>

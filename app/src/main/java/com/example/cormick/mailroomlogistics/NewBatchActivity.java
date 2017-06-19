@@ -1,10 +1,18 @@
 package com.example.cormick.mailroomlogistics;
 
+import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,13 +28,17 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
-public class NewBatchActivity extends AppCompatActivity {
+public class NewBatchActivity extends AppCompatActivity  {
     private Spinner carrierSpinner;
     private EditText numberOfPackages;
 
@@ -39,6 +51,7 @@ public class NewBatchActivity extends AppCompatActivity {
     private String recipient_name = "";
     private String carrier = "";
     private int numPack;
+    byte[] sigArray = null;
 
     private Button getSignature, mClear, mCancel, mSave, bComplete;
 
@@ -49,6 +62,7 @@ public class NewBatchActivity extends AppCompatActivity {
     View view;
     signature mSignature;
     Bitmap bitmap;
+    File file;
 
 
     public static int REQ_CODE_CHILD = 0;
@@ -58,8 +72,8 @@ public class NewBatchActivity extends AppCompatActivity {
 
     // Creating Separate Directory for saving Generated Images
     String DIRECTORY = Environment.getExternalStorageDirectory().getPath() + "/DigitSign/";
-    String pic_name = new SimpleDateFormat("MM/dd/yyyy_HH:mm:ss", Locale.getDefault()).format(new Date());
-    String StoredPath = DIRECTORY + pic_name + ".png";
+    String pic_name = new SimpleDateFormat("yyMMddHHmmss", Locale.getDefault()).format(new Date());
+    String storedPath = DIRECTORY + pic_name +"signature.png";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +110,13 @@ public class NewBatchActivity extends AppCompatActivity {
 
         parcelView.setAdapter(adapter);
 
+        file = new File(DIRECTORY);
+        if (!file.exists()) {
+            Log.v("DIR", "MAKE DIR");
+            file.mkdir();
+            Log.v("Dir path", file.getAbsolutePath());
+        }
+
 
 
         getSignature.setOnClickListener(new View.OnClickListener(){
@@ -117,22 +138,23 @@ public class NewBatchActivity extends AppCompatActivity {
     }
 
     public void captureSignature() {
-        mContent = (LinearLayout) dialog.findViewById(R.id.linearLayout);
-        mSignature = new signature(getApplicationContext(), null);
-        mSignature.setBackgroundColor(Color.WHITE);
+        NewBatchActivity.this.mContent = (LinearLayout) dialog.findViewById(R.id.linearLayout);
+        NewBatchActivity.this.mSignature = new signature(getApplicationContext(), null);
+        NewBatchActivity.this.mSignature.setBackgroundColor(Color.WHITE);
         // Dynamically generating Layout through java code
-        mContent.addView(mSignature, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        NewBatchActivity.this.mContent.addView(NewBatchActivity.this.mSignature,
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
         mClear = (Button) dialog.findViewById(R.id.clear);
         mSave = (Button) dialog.findViewById(R.id.getsign);
 //        mSave.setEnabled(false);
         mCancel = (Button) dialog.findViewById(R.id.cancel);
-        view = mContent;
+        NewBatchActivity.this.view = NewBatchActivity.this.mContent;
 
         mClear.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.v("tag", "Panel Cleared");
-                mSignature.clear();
+                NewBatchActivity.this.mSignature.clear();
                 getSignature.setEnabled(false);
             }
         });
@@ -142,18 +164,72 @@ public class NewBatchActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 Log.v("tag", "Panel Saved");
-                view.setDrawingCacheEnabled(true);
+                NewBatchActivity.this.view.setDrawingCacheEnabled(true);
 //                mSignature.save(view, StoredPath, mContent, bitmap, newBatch);
                 Log.v("tag", "Width: " + v.getWidth());
                 Log.v("tag", "Height: " + v.getHeight());
-                if (bitmap == null) {
-                    bitmap = Bitmap.createBitmap(mContent.getWidth(), mContent.getHeight(), Bitmap.Config.RGB_565);
+
+                ContextWrapper cw = new ContextWrapper(getApplicationContext());
+
+
+
+                String fname = pic_name + "signature.png";
+                File newfile = new File(cw.getFilesDir(), fname);
+
+
+                if (NewBatchActivity.this.bitmap == null) {
+                    Log.v("DEBUG", "HEREeeeeeeee");
+                    NewBatchActivity.this.bitmap = Bitmap.createBitmap(NewBatchActivity.this.mContent.getWidth(),
+                            NewBatchActivity.this.mContent.getHeight(), Bitmap.Config.RGB_565);
+
                 }
-                newBatch.setSignature(bitmap);
+                Canvas canvas = new Canvas(NewBatchActivity.this.bitmap);
+//               NewBatchActivity.this.file = new File (DIRECTORY, pic_name + "signature.png");
+
+
+//
+//                if (file.exists()) file.delete();
+
+                try {
+
+//                    createDirectory();
+//                    createFile(storedPath);
+                    // Output the file
+                    Log.v("SAVE", "-2");
+                    newfile.getParentFile().mkdirs();
+                    Log.v("SAVE", "-1");
+                    newfile.createNewFile();
+                    Log.v("SAVE", "0");
+                    FileOutputStream mFileOutStream = new FileOutputStream(newfile);
+                    Log.v("SAVE", "1");
+                    v.draw(canvas);
+                    // Convert the output file to Image such as .png
+                    NewBatchActivity.this.bitmap.compress(Bitmap.CompressFormat.PNG, 90, mFileOutStream);
+                    Log.v("SAVE", "2");
+                    String path = newfile.getAbsolutePath();
+                    newBatch.setPhoto_path(path);
+                    Log.v("SAVE", "SUCCESS DIR NAME" + newfile.getAbsolutePath());
+                    mFileOutStream.flush();
+                    mFileOutStream.close();
+                } catch (Exception e) {
+                    Log.v("log_tag", e.toString());
+                }
+
+
+//                ByteArrayOutputStream out = new ByteArrayOutputStream();
+//                bitmap.compress(Bitmap.CompressFormat.PNG, 0, out);
+//                newBatch.setSignature(bitmap);
+//                newBatch.setSignatureArray(out.toByteArray());
+                System.out.println("SIGARR SAVE: " + storedPath);
+
+
+
+
+//                NewBatchActivity.this.sigArray = out.toByteArray();
                 dialog.dismiss();
                 Toast.makeText(getApplicationContext(), "Successfully Saved", Toast.LENGTH_SHORT).show();
                 // Calling the same class
-                recreate();
+//                recreate();
             }
         });
         mCancel.setOnClickListener(new View.OnClickListener() {
@@ -198,6 +274,8 @@ public class NewBatchActivity extends AppCompatActivity {
         newBatch.setDestination(this.destination);
         newBatch.setRecipientName(this.recipient_name);
 
+
+
         // loop through the number of parcels for the batch to fill in
 
         for(int i = 0; i < numPack; i ++) {
@@ -216,7 +294,7 @@ public class NewBatchActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (REQ_CODE_CHILD == this.numPack) {
+//        if (REQ_CODE_CHILD == this.numPack) {
             Log.v("Tag", "Made it back here");
             Parcel tempParcel;
             tempParcel = (Parcel) data.getExtras().getSerializable("NEWPARCEL");
@@ -233,17 +311,89 @@ public class NewBatchActivity extends AppCompatActivity {
             String[] ret = new String[this.numPack];
             for(int i = 0; i < this.newBatch.getArrSize(); i++) {
                 temp = tempArr.get(i);
-                String date = temp.getDateReceived();
-                ret[i] = date;
+                String trackingNumber = temp.getTrackingNumber();
+                ret[i] = trackingNumber;
 
             }
             ArrayAdapter<String> adapter =
                     new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, ret);
             parcelView.setAdapter(adapter);
 
+//        }
+
+
+    }
+
+
+
+    private void askForPermission(String permission, Integer requestCode) {
+        if (ContextCompat.checkSelfPermission(NewBatchActivity.this, permission) != PackageManager.PERMISSION_GRANTED) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(NewBatchActivity.this, permission)) {
+
+//This is called if user has denied the permission before
+//In this case I am just asking the permission again
+                ActivityCompat.requestPermissions(NewBatchActivity.this, new String[]{permission}, requestCode);
+
+            } else {
+
+                ActivityCompat.requestPermissions(NewBatchActivity.this, new String[]{permission}, requestCode);
+            }
+        } else {
+            createDirectory();
+// Toast.makeText(this, "" + permission + " is already granted.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Log.v("onRequestpermission", requestCode + "//");
+        if (ActivityCompat.checkSelfPermission(this, permissions[0]) == PackageManager.PERMISSION_GRANTED) {
+            switch (requestCode) {
+//Location
+                case 4:
+                    createDirectory();
+            }
+
+        } else {
+            Log.v("Permission Denied", requestCode + "else//");
         }
 
+    }
 
+    //Though the code for file and directory is not required but for reference i am putting it.
+
+    private File createFile(String filename){
+//        String filename = String.valueOf(url.hashCode());
+// String filename = URLEncoder.encode(url);
+        File f = new File(DIRECTORY, filename);
+        if(f.exists()) {
+            Log.v("FILE PATH0", f.getAbsolutePath());
+            return f;
+        }
+        else {
+            try {
+                f.createNewFile();
+                Log.v("FILE PATH1", f.getAbsolutePath());
+            } catch (IOException e){
+                Log.v("File IOException", e.getMessage());
+            }
+
+        }
+        return f;
+    }
+
+    // Method to create Directory, if the Directory doesn't exists
+    private void createDirectory(){
+
+        Log.v("Create dir path", DIRECTORY);
+        file = new File(DIRECTORY);
+        if (!file.exists()) {
+            Log.v("DIR", "MKDIR");
+            file.mkdirs();
+        }
     }
     public void completeBatch(View view) {
         if(this.destination.equals("")) {
@@ -267,12 +417,15 @@ public class NewBatchActivity extends AppCompatActivity {
         this.carrier = carrierSpinner.getSelectedItem().toString();
 
 
-
-
+        newBatch.setParcel_number(this.numPack);
         newBatch.setDateReceived(this.date_received);
         newBatch.setDestination(this.destination);
         newBatch.setRecipientName(this.recipient_name);
+        newBatch.setDateDelivered("Ongoing");
 
+        System.out.println("SIGGARR" + this.sigArray);
+
+        newBatch.setSignatureArray(this.sigArray);
 
         SQLDatabaseHandler db = new SQLDatabaseHandler(this);
         db.saveBatch(newBatch);
